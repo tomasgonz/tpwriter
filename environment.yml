@@ -12,5 +12,6 @@ dependencies:
   - torchvision
   - torchtext
   - nb_conda_kernels
+  - transformers
   - pip:
     - torchviz
