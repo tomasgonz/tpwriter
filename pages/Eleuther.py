@@ -1,13 +1,31 @@
 import streamlit as st
 from transformers import pipeline
-gen = pipeline('text-generation', model ='EleutherAI/gpt-neo-2.7B')
-#gen = pipeline('text-generation', model ='EleutherAI/gpt-neo-1.3B')
-#gen = pipeline('text-generation', model ='EleutherAI/gpt-neo-125M')
-context = st.text_input('Context')
+import boto3
+import json
 
-if context != '':
-    output = gen(context, max_length=100, do_sample=True, temperature=0.9)
-    with open('dl.txt', 'w') as f:
-        f.write(str(output))
+session = boto3.Session()
 
-    st.write(output[0]['generated_text'])
+sagemaker_runtime = session.client('sagemaker-runtime', region_name="us-east-1")
+
+# The name of the endpoint. The name must be unique within an AWS Region in your AWS account. 
+endpoint_name='sm-endpoint-gpt-j-6b'
+
+
+def generate_text(prompt):
+    payload = {"inputs": prompt}
+
+    response = sagemaker_runtime.invoke_endpoint(
+        EndpointName=endpoint_name, ContentType='application/json', 
+        Body=json.dumps(payload))
+                                
+    result = json.loads(response['Body'].read().decode())
+    text = result[0]['generated_text']
+    return text
+
+
+st.header("My very own GPT-J Playground")
+prompt = st.text_area("Enter your prompt here:")
+
+if st.button("Run"):
+    generated_text = generate_text(prompt)
+    st.write(generated_text)
