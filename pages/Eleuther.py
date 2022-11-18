@@ -3,15 +3,20 @@ from transformers import pipeline
 import boto3
 import json
 
-session = boto3.Session()
+data = {
+    'text' 'Sustainable energy',
+    'parameters:': {
+        'min_length': 100,
+        'max_length': 200
+    }
+}
 
-sagemaker_runtime = session.client('sagemaker-runtime', region_name="us-east-1")
 
 # The name of the endpoint. The name must be unique within an AWS Region in your AWS account. 
-endpoint_name='sm-endpoint-gpt-j-6b'
-
-
 def generate_text(prompt):
+    session = boto3.Session()
+    sagemaker_runtime = session.client('sagemaker-runtime', region_name="us-east-1")
+    endpoint_name='sm-endpoint-gpt-j-6b'
     payload = {"inputs": prompt}
 
     response = sagemaker_runtime.invoke_endpoint(
