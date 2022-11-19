@@ -1,13 +1,18 @@
 import streamlit as st
 from sagemaker.huggingface import HuggingFaceModel
 import sagemaker
+import boto3
+import json
 
+try:
+    role = sagemaker.get_execution_role()
+except ValueError:
+    iam = boto3.client('iam')
+    role = iam.get_role(RoleName='SageMakerFullAccess')['Role']['Arn']
 
+st.write(role)
 
-if st.button("Run"):
-    # IAM role with permissions to create endpoint
-    role = "arn:aws:iam::982788328952:role/service-role/AmazonSageMaker-ExecutionRole-20221118T105525"
-
+if st.button("Deploy model"):
     # public S3 URI to gpt-j artifact
     model_uri="s3://huggingface-sagemaker-models/transformers/4.12.3/pytorch/1.9.1/gpt-j/model.tar.gz"
     # create Hugging Face Model Class
@@ -27,7 +32,25 @@ if st.button("Run"):
         endpoint_name='sm-endpoint-gpt-j-6b'
     )
 
-if st.button("Role"):
-    role = sagemaker.get_execution_role()
-    print(role)
 
+endpoint_name = st.text_area("Enter endpoint name:")
+
+def generate_text(prompt):
+    sagemaker_runtime = boto3.Session(profile_name="default").client('sagemaker-runtime')
+    payload = {"inputs": prompt}
+    sagemaker_runtime.invoke_endpoint(
+        EndpointName=endpoint_name,
+        ContentType='application/json',
+        Body=json.dumps(payload)
+        )
+                                
+    result = json.loads(response['Body'].read().decode())
+    text = result[0]['generated_text']
+    return text
+
+st.header("My very own GPT-J Playground")
+prompt = st.text_area("Enter your prompt here:")
+
+if st.button("Run"):
+    generated_text = generate_text(prompt)
+    st.write(generated_text)
