@@ -14,5 +14,7 @@ dependencies:
   - nb_conda_kernels
   - transformers
   - streamlit
+  - boto3
+  - sagemaker
   - pip:
     - torchviz
