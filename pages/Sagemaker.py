@@ -54,7 +54,12 @@ def generate_text(prompt):
     #sagemaker_runtime = boto3.Session(profile_name="default").client('sagemaker-runtime')
     sagemaker_runtime = sm_client
 
-    payload = {"inputs": prompt}
+    payload = {"inputs": prompt,'parameters': {
+        'min_length': 100,
+        'max_length': 200,
+        'temperature': 0.7,
+    }
+    }
     response = sagemaker_runtime.invoke_endpoint(
         EndpointName=endpoint_name,
         ContentType='application/json',
