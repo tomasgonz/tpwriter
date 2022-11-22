@@ -4,11 +4,25 @@ import sagemaker
 import boto3
 import json
 
+sess = sagemaker.Session()
+
+sagemaker_session_bucket=None
+
+if sagemaker_session_bucket is None and sess is not None:
+    # set to default bucket if a bucket name is not given
+    sagemaker_session_bucket = sess.default_bucket()
+
+
 try:
     role = sagemaker.get_execution_role()
 except ValueError:
     iam = boto3.client('iam')
     role = iam.get_role(RoleName='SageMakerFullAccess')['Role']['Arn']
+
+    
+sess = sagemaker.Session(default_bucket=sagemaker_session_bucket)
+region = sess.boto_region_name
+sm_client = boto3.client('sagemaker-runtime')
 
 st.write(role)
 
@@ -36,9 +50,12 @@ if st.button("Deploy model"):
 endpoint_name = st.text_area("Enter endpoint name:")
 
 def generate_text(prompt):
-    sagemaker_runtime = boto3.Session(profile_name="default").client('sagemaker-runtime')
+    
+    #sagemaker_runtime = boto3.Session(profile_name="default").client('sagemaker-runtime')
+    sagemaker_runtime = sm_client
+
     payload = {"inputs": prompt}
-    sagemaker_runtime.invoke_endpoint(
+    response = sagemaker_runtime.invoke_endpoint(
         EndpointName=endpoint_name,
         ContentType='application/json',
         Body=json.dumps(payload)
