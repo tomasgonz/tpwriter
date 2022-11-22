@@ -18,15 +18,14 @@ try:
 except ValueError:
     iam = boto3.client('iam')
     role = iam.get_role(RoleName='SageMakerFullAccess')['Role']['Arn']
-
     
 sess = sagemaker.Session(default_bucket=sagemaker_session_bucket)
 region = sess.boto_region_name
 sm_client = boto3.client('sagemaker-runtime')
 
-st.write(role)
+st.sidebar.info(role)
 
-if st.button("Deploy model"):
+if st.sidebar.button("Deploy"):
     # public S3 URI to gpt-j artifact
     model_uri="s3://huggingface-sagemaker-models/transformers/4.12.3/pytorch/1.9.1/gpt-j/model.tar.gz"
     # create Hugging Face Model Class
@@ -38,7 +37,7 @@ if st.button("Deploy model"):
         role=role, 
     )
 
-
+    st.write("Deploying model...")
     # deploy model to SageMaker Inference
     predictor = huggingface_model.deploy(
         initial_instance_count=1, # number of instances
@@ -46,8 +45,32 @@ if st.button("Deploy model"):
         endpoint_name='sm-endpoint-gpt-j-6b'
     )
 
+    st.write("Model deployed!")
 
-endpoint_name = st.text_area("Enter endpoint name:")
+st.sidebar.caption("Deploy the model to AMazon SageMaker Inference")
+
+if st.sidebar.button("Delete"):
+    # delete endpoint
+    sm_client = boto3.client('sagemaker')
+    sm_client.delete_endpoint(EndpointName='sm-endpoint-gpt-j-6b')
+    sm_client.delete_endpoint_config(EndpointConfigName='sm-endpoint-gpt-j-6b')
+    sm_client.delete_model(ModelName='sm-endpoint-gpt-j-6b')
+    
+    st.write("Endpoint deleted!")
+
+st.sidebar.caption("Delete the model from Amazon SageMaker Inference")
+
+if st.sidebar.button("Info"):
+    # get endpoint info
+    sm_client = boto3.client('sagemaker')
+    response = sm_client.describe_endpoint(EndpointName='sm-endpoint-gpt-j-6b')
+    st.write(response)
+
+endpoint_name = "sm-endpoint-gpt-j-6b"
+
+temp = st.sidebar.slider("Temperature", 0.0, 1.0, 0.7, 0.1)
+min_length = st.sidebar.slider("Min length", 0, 100, 100, 10)
+max_length = st.sidebar.slider("Max length", 0, 1000, 200, 10)
 
 def generate_text(prompt):
     
@@ -55,9 +78,9 @@ def generate_text(prompt):
     sagemaker_runtime = sm_client
 
     payload = {"inputs": prompt,'parameters': {
-        'min_length': 100,
-        'max_length': 200,
-        'temperature': 0.7,
+        'min_length': min_length,
+        'max_length': max_length,
+        'temperature': temp,
     }
     }
     response = sagemaker_runtime.invoke_endpoint(
@@ -70,9 +93,10 @@ def generate_text(prompt):
     text = result[0]['generated_text']
     return text
 
-st.header("My very own GPT-J Playground")
-prompt = st.text_area("Enter your prompt here:")
+st.title("My secret little helper")
+st.caption("Developed by Tomas Gonzalez.")
+prompt = st.text_area("What would you like me to do?")
 
-if st.button("Run"):
+if st.button("Do it!"):
     generated_text = generate_text(prompt)
     st.write(generated_text)
