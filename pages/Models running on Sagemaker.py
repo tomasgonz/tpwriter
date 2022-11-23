@@ -25,6 +25,8 @@ sm_client = boto3.client('sagemaker-runtime')
 
 st.sidebar.info(role)
 
+models = ['']
+
 if st.sidebar.button("Deploy"):
     # public S3 URI to gpt-j artifact
     model_uri="s3://huggingface-sagemaker-models/transformers/4.12.3/pytorch/1.9.1/gpt-j/model.tar.gz"
@@ -47,7 +49,7 @@ if st.sidebar.button("Deploy"):
 
     st.write("Model deployed!")
 
-st.sidebar.caption("Deploy the model to AMazon SageMaker Inference")
+st.sidebar.caption("Deploy the model to Amazon SageMaker Inference")
 
 if st.sidebar.button("Delete"):
     # delete endpoint
