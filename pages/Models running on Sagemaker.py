@@ -27,6 +27,8 @@ st.sidebar.info(role)
 
 models = ['']
 
+instance_type = st.sidebar.selectbox("Select instance type", ['ml.g4dn.xlarge', 'ml.p3.2x.large'])
+    
 if st.sidebar.button("Deploy"):
     # public S3 URI to gpt-j artifact
     model_uri="s3://huggingface-sagemaker-models/transformers/4.12.3/pytorch/1.9.1/gpt-j/model.tar.gz"
@@ -43,7 +45,7 @@ if st.sidebar.button("Deploy"):
     # deploy model to SageMaker Inference
     predictor = huggingface_model.deploy(
         initial_instance_count=1, # number of instances
-        instance_type='ml.g4dn.xlarge', #'ml.p3.2xlarge' # ec2 instance type
+        instance_type = instance_type,
         endpoint_name='sm-endpoint-gpt-j-6b'
     )
 
@@ -56,9 +58,11 @@ if st.sidebar.button("Delete"):
     sm_client = boto3.client('sagemaker')
     sm_client.delete_endpoint(EndpointName='sm-endpoint-gpt-j-6b')
     sm_client.delete_endpoint_config(EndpointConfigName='sm-endpoint-gpt-j-6b')
-    sm_client.delete_model(ModelName='sm-endpoint-gpt-j-6b')
     
-    st.write("Endpoint deleted!")
+    model_name = str(boto3.client('sagemaker').list_models()['Models'][0])
+    sm_client.delete_model(ModelName=model_name)
+    
+    st.write("Everything removed!")
 
 st.sidebar.caption("Delete the model from Amazon SageMaker Inference")
 
@@ -67,6 +71,13 @@ if st.sidebar.button("Info"):
     sm_client = boto3.client('sagemaker')
     response = sm_client.describe_endpoint(EndpointName='sm-endpoint-gpt-j-6b')
     st.write(response)
+
+    model_names = []
+
+    for key in boto3.client('sagemaker').list_models()['Models']:
+        model_names.append(key['ModelName'])
+    
+    
 
 endpoint_name = "sm-endpoint-gpt-j-6b"
 
