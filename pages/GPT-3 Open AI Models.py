@@ -9,7 +9,7 @@ openai.Model.list()
 
 prompt = st.text_area("Enter your input here")
 
-model = st.sidebar.selectbox("Select engine", ['text-davinci-003', 'ml.p3.2x.large'])
+model = st.sidebar.selectbox("Select engine", ['text-davinci-003', 'text-davinci-002'])
 
 temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.7, 0.1)
 response_length = st.sidebar.slider("Response length", 0, 1000, 200, 10)
