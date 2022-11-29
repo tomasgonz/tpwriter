@@ -16,5 +16,6 @@ dependencies:
   - streamlit
   - boto3
   - sagemaker
+  - openai
   - pip:
     - torchviz
