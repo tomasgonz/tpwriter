@@ -4,13 +4,19 @@ import openai
 import os
 
 openai.organization = "org-BKMBE8WdTAJKgRdZfV9tMxBt"
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.Model.list()
+
+
+if 'OPENAI_API_KEY' in os.environ:
+    openai.api_key = os.environ['OPENAI_API_KEY']
+    st.sidebar.write(openai.api_key)
+else:
+    openai.api_key = st.sidebar.text_input("key")
+
+if openai.api_key != "":
+    models = openai.Model.list()
 
 prompt = st.text_area("Enter your input here")
-
 model = st.sidebar.selectbox("Select engine", ['text-davinci-003', 'text-davinci-002'])
-
 temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.7, 0.1)
 response_length = st.sidebar.slider("Response length", 0, 1000, 200, 10)
 
